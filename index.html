@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EasyView — Screen Share Helper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+  :root {
+    --bg: #F6F2EC;
+    --card: #FFFFFF;
+    --primary: #2D6A4F;
+    --primary-soft: #D8F3DC;
+    --primary-dark: #1B4332;
+    --warm: #E76F51;
+    --warm-soft: #FEF0EB;
+    --text: #2A2A2A;
+    --muted: #8A8580;
+    --border: #E8E2D9;
+    --radius: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px 40px;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── Header ── */
+  .brand {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .brand h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: 32px;
+    color: var(--primary-dark);
+    letter-spacing: -1px;
+  }
+
+  .brand h1 span { color: var(--warm); }
+
+  .brand p {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+    margin-top: 4px;
+  }
+
+  /* ── Role picker ── */
+  .roles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .role-card {
+    background: var(--card);
+    border: 2.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 16px 22px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .role-card:active { transform: scale(0.97); }
+  .role-card:hover { border-color: var(--primary); box-shadow: 0 4px 24px rgba(45,106,79,0.12); }
+  .role-card .emoji { font-size: 44px; margin-bottom: 12px; display: block; }
+  .role-card .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .role-card .hint {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  /* ── Main card ── */
+  .main-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    width: 100%;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    animation: cardIn 0.5s cubic-bezier(.34,1.56,.64,1) both;
+    text-align: center;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .main-card h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+  }
+
+  .main-card .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+    margin-bottom: 28px;
+  }
+
+  /* ── Big button ── */
+  .big-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 20px;
+    border-radius: 16px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .big-btn:active { transform: scale(0.97); }
+  .big-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .big-btn.green {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 16px rgba(45,106,79,0.3);
+  }
+  .big-btn.green:hover:not(:disabled) { background: var(--primary-dark); }
+
+  .big-btn .btn-icon { font-size: 24px; }
+
+  /* ── Room code display (sharer) ── */
+  .room-code {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 24px 0;
+  }
+
+  .room-code .digit {
+    width: 56px;
+    height: 68px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary-dark);
+  }
+
+  .room-code .digit.pop {
+    animation: digitPop 0.4s cubic-bezier(.34,1.56,.64,1) both;
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+
+  @keyframes digitPop {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Code input (viewer) ── */
+  .code-input-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 24px 0;
+  }
+
+  .code-input-row input {
+    width: 56px;
+    height: 68px;
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    background: var(--bg);
+    border: 2.5px solid var(--border);
+    border-radius: 14px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
+    caret-color: var(--primary);
+  }
+
+  .code-input-row input:focus {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+
+  /* ── Status ── */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  .status.waiting { background: #FFF8E1; color: #E65100; }
+  .status.ok { background: var(--primary-soft); color: var(--primary-dark); }
+  .status.bad { background: var(--warm-soft); color: var(--warm); }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: blink 1.4s infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ── Video ── */
+  .video-container {
+    width: 100%;
+    background: #111;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+  }
+
+  .video-container video {
+    width: 100%;
+    display: block;
+    max-height: 65vh;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .live-badge {
+    position: absolute;
+    top: 12px; left: 12px;
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .live-badge .red-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #EF4444;
+    animation: blink 1s infinite;
+  }
+
+  /* ── Success state ── */
+  .success-state { padding: 20px 0 8px; }
+
+  .success-state .check {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 36px;
+    animation: checkPop 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  @keyframes checkPop { from { transform: scale(0); } to { transform: scale(1); } }
+
+  .success-state h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--primary-dark);
+    margin-bottom: 6px;
+  }
+
+  .success-state p {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* ── Buttons ── */
+  .stop-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 12px;
+    border: 2px solid var(--warm);
+    background: transparent;
+    color: var(--warm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s;
+  }
+  .stop-btn:hover { background: var(--warm-soft); }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .back-link:hover { color: var(--text); }
+
+  .helper-text {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  .error-msg {
+    color: var(--warm);
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 8px;
+    min-height: 20px;
+  }
+
+  .hidden { display: none !important; }
+
+  .spinner {
+    width: 24px; height: 24px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .callout {
+    background: #FFF9EC;
+    border: 1.5px dashed #F0D68C;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 20px;
+    text-align: left;
+  }
+
+  .callout .callout-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #B8860B;
+    margin-bottom: 4px;
+  }
+
+  .callout .callout-body {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* ── Retry banner ── */
+  .retry-banner {
+    background: var(--warm-soft);
+    border: 1.5px solid var(--warm);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .retry-banner p {
+    font-size: 14px;
+    color: var(--warm);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .retry-banner button {
+    background: var(--warm);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="brand">
+    <h1>Easy<span>View</span></h1>
+    <p>Screen sharing — no app needed</p>
+  </div>
+
+  <!-- ════════ ROLE PICKER ════════ -->
+  <div id="s-roles" class="roles">
+    <div class="role-card" onclick="goShare()">
+      <span class="emoji">📱</span>
+      <div class="name">Share Screen</div>
+      <div class="hint">For Mom — let someone see your screen</div>
+    </div>
+    <div class="role-card" onclick="goView()">
+      <span class="emoji">👀</span>
+      <div class="name">View Screen</div>
+      <div class="hint">For helper — watch & guide</div>
+    </div>
+  </div>
+
+  <!-- ════════ SHARER: START ════════ -->
+  <div id="s-share-start" class="main-card hidden">
+    <span class="back-link" onclick="goHome()">← Back</span>
+    <h2>Share Your Screen</h2>
+    <p class="subtitle">Tap the big green button below.<br>When your phone asks, tap <strong>"Start now"</strong>.</p>
+    <button class="big-btn green" id="shareBtn" onclick="startShare()">
+      <span class="btn-icon">📱</span>
+      Share My Screen
+    </button>
+    <div class="callout">
+      <div class="callout-title">💡 What happens?</div>
+      <div class="callout-body">Your helper will be able to see your screen to guide you. They <strong>cannot touch or change anything</strong> — only look.</div>
+    </div>
+  </div>
+
+  <!-- ════════ SHARER: WAITING ════════ -->
+  <div id="s-share-waiting" class="main-card hidden">
+    <span class="status waiting"><span class="dot"></span> Waiting for helper…</span>
+    <h2>Tell Your Helper This Code</h2>
+    <p class="subtitle">Read these 6 numbers to your helper over the phone:</p>
+    <div class="room-code" id="roomCodeDisplay"></div>
+    <p class="helper-text">Your helper types this code on their phone to connect and see your screen.</p>
+  </div>
+
+  <!-- ════════ SHARER: CONNECTED ════════ -->
+  <div id="s-share-connected" class="main-card hidden">
+    <div class="success-state">
+      <div class="check">✅</div>
+      <h3>You're Connected!</h3>
+      <p>Your helper can see your screen now.<br>Just use your phone normally!</p>
+    </div>
+    <button class="stop-btn" onclick="endSession()">⏹ Stop Sharing</button>
+  </div>
+
+  <!-- ════════ VIEWER: ENTER CODE ════════ -->
+  <div id="s-view-enter" class="main-card hidden">
+    <span class="back-link" onclick="goHome()">← Back</span>
+    <h2>Enter Mom's Code</h2>
+    <p class="subtitle">Ask Mom for the 6-digit code showing on her screen:</p>
+    <div class="code-input-row" id="codeInputRow">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+    </div>
+    <div class="error-msg" id="viewError"></div>
+    <button class="big-btn green" id="joinBtn" onclick="joinSession()">
+      <span class="btn-icon">🔗</span>
+      Connect
+    </button>
+  </div>
+
+  <!-- ════════ VIEWER: CONNECTING ════════ -->
+  <div id="s-view-connecting" class="main-card hidden">
+    <span class="status waiting"><span class="dot"></span> Connecting…</span>
+    <h2>Almost there…</h2>
+    <p class="subtitle">Setting up the connection to see Mom's screen.</p>
+  </div>
+
+  <!-- ════════ VIEWER: WATCHING ════════ -->
+  <div id="s-view-watching" class="hidden" style="width:100%;">
+    <div class="status ok" style="margin-bottom:14px;"><span class="dot"></span> Connected — viewing Mom's screen</div>
+    <div class="video-container">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <div class="live-badge"><span class="red-dot"></span> LIVE</div>
+    </div>
+    <button class="stop-btn" onclick="endSession()" style="width:100%;">⏹ Disconnect</button>
+  </div>
+
+  <!-- ════════ ENDED ════════ -->
+  <div id="s-ended" class="main-card hidden">
+    <h2>Session Ended</h2>
+    <p class="subtitle">The screen sharing session has ended.</p>
+    <button class="big-btn green" onclick="location.reload()" style="margin-top:16px;">
+      <span class="btn-icon">🔄</span>
+      Start Over
+    </button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  EasyView — PeerJS-powered screen sharing
+// ══════════════════════════════════════════
+
+let peer = null;       // PeerJS instance
+let conn = null;       // data connection (for signaling readiness)
+let call = null;       // media call
+let localStream = null;
+let roomCode = '';
+
+const SCREENS = [
+  's-roles', 's-share-start', 's-share-waiting', 's-share-connected',
+  's-view-enter', 's-view-connecting', 's-view-watching', 's-ended'
+];
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function showOnly(id) { SCREENS.forEach(hide); show(id); }
+
+// ── Generate 6-digit code ──
+function makeCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+// ── PeerJS ID from code (prefix to avoid conflicts) ──
+function peerId(code) {
+  return 'easyview-' + code;
+}
+
+// ── Navigation ──
+function goHome() {
+  cleanup();
+  showOnly('s-roles');
+}
+
+function goShare() { showOnly('s-share-start'); }
+
+function goView() {
+  showOnly('s-view-enter');
+  setTimeout(() => {
+    const first = document.querySelector('#codeInputRow input');
+    if (first) first.focus();
+  }, 300);
+}
+
+// ── Auto-route from URL ──
+(function() {
+  const p = location.pathname;
+  if (p === '/share') goShare();
+  else if (p === '/view') goView();
+})();
+
+// ══════════════════════════
+//  SHARER FLOW (Mom's side)
+// ══════════════════════════
+
+async function startShare() {
+  const btn = document.getElementById('shareBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Starting…';
+
+  try {
+    // 1. Capture screen FIRST — most likely failure point
+    localStream = await navigator.mediaDevices.getDisplayMedia({
+      video: {
+        cursor: 'always',
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 15, max: 30 }
+      },
+      audio: false
+    });
+
+    // If user stops sharing via OS UI
+    localStream.getVideoTracks()[0].addEventListener('ended', () => endSession());
+
+    // 2. Create PeerJS peer with a room code
+    roomCode = makeCode();
+
+    peer = new Peer(peerId(roomCode), {
+      debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+        ]
+      }
+    });
+
+    peer.on('open', () => {
+      // Show the code to Mom
+      showOnly('s-share-waiting');
+      const display = document.getElementById('roomCodeDisplay');
+      display.innerHTML = '';
+      roomCode.split('').forEach((d, i) => {
+        const div = document.createElement('div');
+        div.className = 'digit';
+        div.textContent = d;
+        setTimeout(() => div.classList.add('pop'), i * 100);
+        display.appendChild(div);
+      });
+    });
+
+    // 3. When viewer calls us, answer with our screen stream
+    peer.on('call', (incomingCall) => {
+      call = incomingCall;
+      call.answer(localStream);
+
+      call.on('stream', () => {
+        // We don't need their stream, but connection is live
+        showOnly('s-share-connected');
+      });
+
+      call.on('close', () => endSession());
+      call.on('error', () => endSession());
+
+      // Show connected after brief delay (sometimes 'stream' event doesn't fire for sharer)
+      setTimeout(() => {
+        if (call && call.open !== false) {
+          showOnly('s-share-connected');
+        }
+      }, 2000);
+    });
+
+    // Also listen for data connection (viewer pings us to trigger)
+    peer.on('connection', (dataConn) => {
+      conn = dataConn;
+      conn.on('data', (data) => {
+        if (data === 'ping') {
+          // Viewer is ready — we just wait for the call
+        }
+      });
+      conn.on('close', () => endSession());
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer error:', err);
+      if (err.type === 'unavailable-id') {
+        // Code collision — try again with new code
+        roomCode = makeCode();
+        peer.destroy();
+        startShare();
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-icon">📱</span> Share My Screen';
+      }
+    });
+
+  } catch (err) {
+    console.error('Share error:', err);
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon">📱</span> Share My Screen';
+  }
+}
+
+// ══════════════════════════
+//  VIEWER FLOW (Your side)
+// ══════════════════════════
+
+function joinSession() {
+  const inputs = document.querySelectorAll('#codeInputRow input');
+  const code = Array.from(inputs).map(i => i.value).join('');
+  const errEl = document.getElementById('viewError');
+
+  if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+    errEl.textContent = 'Please enter all 6 digits';
+    return;
+  }
+
+  errEl.textContent = '';
+  roomCode = code;
+
+  const btn = document.getElementById('joinBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Connecting…';
+
+  showOnly('s-view-connecting');
+
+  peer = new Peer(undefined, {
+    debug: 0,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+      ]
+    }
+  });
+
+  peer.on('open', () => {
+    const targetId = peerId(roomCode);
+
+    // Open a data connection first (to check if peer exists)
+    conn = peer.connect(targetId, { reliable: true });
+
+    conn.on('open', () => {
+      conn.send('ping');
+
+      // Now call the sharer — we send a dummy stream (or no stream)
+      // PeerJS requires a stream for call, so create a silent one
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const dummyStream = canvas.captureStream(1);
+
+      call = peer.call(targetId, dummyStream);
+
+      call.on('stream', (remoteStream) => {
+        const video = document.getElementById('remoteVideo');
+        video.srcObject = remoteStream;
+        showOnly('s-view-watching');
+      });
+
+      call.on('close', () => endSession());
+      call.on('error', (err) => {
+        console.error('Call error:', err);
+        endSession();
+      });
+    });
+
+    conn.on('error', (err) => {
+      console.error('Connection error:', err);
+      showOnly('s-view-enter');
+      errEl.textContent = 'Could not find that code. Check and try again.';
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-icon">🔗</span> Connect';
+    });
+  });
+
+  peer.on('error', (err) => {
+    console.error('Peer error:', err);
+    showOnly('s-view-enter');
+
+    if (err.type === 'peer-unavailable') {
+      errEl.textContent = 'Code not found. Make sure Mom has started sharing.';
+    } else {
+      errEl.textContent = 'Connection failed. Please try again.';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon">🔗</span> Connect';
+  });
+}
+
+// ══════════════════════
+//  CLEANUP
+// ══════════════════════
+
+function endSession() {
+  cleanup();
+  showOnly('s-ended');
+}
+
+function cleanup() {
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  if (call) { try { call.close(); } catch(e) {} call = null; }
+  if (conn) { try { conn.close(); } catch(e) {} conn = null; }
+  if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+}
+
+// ══════════════════════
+//  CODE INPUT UX
+// ══════════════════════
+
+document.querySelectorAll('#codeInputRow input').forEach((inp, idx, all) => {
+  inp.addEventListener('input', () => {
+    inp.value = inp.value.replace(/\D/g, '').slice(-1);
+    if (inp.value && idx < all.length - 1) {
+      all[idx + 1].focus();
+    }
+    // Auto-submit when all filled
+    if (idx === all.length - 1 && inp.value) {
+      const code = Array.from(all).map(i => i.value).join('');
+      if (code.length === 6) joinSession();
+    }
+  });
+
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !inp.value && idx > 0) {
+      all[idx - 1].focus();
+    }
+  });
+
+  // Paste full code
+  inp.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '');
+    pasted.split('').slice(0, 6).forEach((ch, i) => {
+      if (all[i]) all[i].value = ch;
+    });
+    if (pasted.length >= 6) {
+      all[5].focus();
+      setTimeout(joinSession, 200);
+    }
+  });
+});
+</script>
+
+</body>
+</html>
