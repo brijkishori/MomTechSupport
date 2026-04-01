@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<!-- iOS Safari WebRTC compatibility -->
+<script>
+  // Polyfill: Safari sometimes needs adapter.js for WebRTC compat
+  // We handle it inline instead to keep things simple
+</script>
 <style>
   :root {
     --bg: #F6F2EC;
@@ -21,9 +26,7 @@
     --border: #E8E2D9;
     --radius: 20px;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
@@ -34,7 +37,6 @@
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-
   .page {
     flex: 1;
     display: flex;
@@ -46,395 +48,178 @@
     margin: 0 auto;
     width: 100%;
   }
-
-  /* ── Header ── */
-  .brand {
-    text-align: center;
-    margin-bottom: 32px;
-  }
-
+  .brand { text-align: center; margin-bottom: 32px; }
   .brand h1 {
     font-family: 'Fraunces', serif;
-    font-weight: 800;
-    font-size: 32px;
-    color: var(--primary-dark);
-    letter-spacing: -1px;
+    font-weight: 800; font-size: 32px;
+    color: var(--primary-dark); letter-spacing: -1px;
   }
-
   .brand h1 span { color: var(--warm); }
+  .brand p { color: var(--muted); font-size: 14px; font-weight: 300; margin-top: 4px; }
 
-  .brand p {
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 300;
-    margin-top: 4px;
-  }
-
-  /* ── Role picker ── */
-  .roles {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    width: 100%;
-    margin-bottom: 28px;
-  }
-
+  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; margin-bottom: 28px; }
   .role-card {
-    background: var(--card);
-    border: 2.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 16px 22px;
-    text-align: center;
-    cursor: pointer;
+    background: var(--card); border: 2.5px solid var(--border); border-radius: var(--radius);
+    padding: 28px 16px 22px; text-align: center; cursor: pointer;
     transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
     box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     -webkit-tap-highlight-color: transparent;
   }
-
   .role-card:active { transform: scale(0.97); }
   .role-card:hover { border-color: var(--primary); box-shadow: 0 4px 24px rgba(45,106,79,0.12); }
   .role-card .emoji { font-size: 44px; margin-bottom: 12px; display: block; }
   .role-card .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-  .role-card .hint {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 300;
-    line-height: 1.4;
-  }
+  .role-card .hint { font-size: 12px; color: var(--muted); font-weight: 300; line-height: 1.4; }
 
-  /* ── Main card ── */
   .main-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 32px 24px;
-    width: 100%;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    border: 1px solid var(--border);
-    animation: cardIn 0.5s cubic-bezier(.34,1.56,.64,1) both;
-    text-align: center;
+    background: var(--card); border-radius: var(--radius); padding: 32px 24px;
+    width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.06); border: 1px solid var(--border);
+    animation: cardIn 0.5s cubic-bezier(.34,1.56,.64,1) both; text-align: center;
   }
+  @keyframes cardIn { from { opacity:0; transform: translateY(20px) scale(0.97); } to { opacity:1; transform:none; } }
+  .main-card h2 { font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--primary-dark); margin-bottom:8px; }
+  .main-card .subtitle { font-size:14px; color:var(--muted); font-weight:300; line-height:1.5; margin-bottom:28px; }
 
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.97); }
-    to { opacity: 1; transform: none; }
-  }
-
-  .main-card h2 {
-    font-family: 'Fraunces', serif;
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--primary-dark);
-    margin-bottom: 8px;
-  }
-
-  .main-card .subtitle {
-    font-size: 14px;
-    color: var(--muted);
-    font-weight: 300;
-    line-height: 1.5;
-    margin-bottom: 28px;
-  }
-
-  /* ── Big button ── */
   .big-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    padding: 20px;
-    border-radius: 16px;
-    border: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; padding: 20px; border-radius: 16px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
   }
-
   .big-btn:active { transform: scale(0.97); }
   .big-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .big-btn.green {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 4px 16px rgba(45,106,79,0.3);
-  }
+  .big-btn.green { background: var(--primary); color: white; box-shadow: 0 4px 16px rgba(45,106,79,0.3); }
   .big-btn.green:hover:not(:disabled) { background: var(--primary-dark); }
-
   .big-btn .btn-icon { font-size: 24px; }
 
-  /* ── Room code display (sharer) ── */
-  .room-code {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 24px 0;
+  .secondary-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 16px; border-radius: 14px;
+    border: 2px solid var(--border); background: var(--card);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    color: var(--text); cursor: pointer; transition: all 0.2s;
+    margin-top: 12px;
+    -webkit-tap-highlight-color: transparent;
   }
+  .secondary-btn:hover { border-color: var(--primary); background: var(--primary-soft); }
+  .secondary-btn .btn-icon { font-size: 20px; }
 
+  .room-code { display: flex; justify-content: center; gap: 10px; margin: 24px 0; }
   .room-code .digit {
-    width: 56px;
-    height: 68px;
-    background: var(--bg);
-    border: 2px solid var(--border);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Fraunces', serif;
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--primary-dark);
+    width: 48px; height: 60px; background: var(--bg); border: 2px solid var(--border);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-size: 28px; font-weight: 800; color: var(--primary-dark);
   }
-
   .room-code .digit.pop {
     animation: digitPop 0.4s cubic-bezier(.34,1.56,.64,1) both;
-    border-color: var(--primary);
-    background: var(--primary-soft);
+    border-color: var(--primary); background: var(--primary-soft);
   }
+  @keyframes digitPop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-  @keyframes digitPop {
-    from { transform: scale(0.6); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  /* ── Code input (viewer) ── */
-  .code-input-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 24px 0;
-  }
-
+  .code-input-row { display: flex; justify-content: center; gap: 8px; margin: 24px 0; }
   .code-input-row input {
-    width: 56px;
-    height: 68px;
-    text-align: center;
-    font-family: 'Fraunces', serif;
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--primary-dark);
-    background: var(--bg);
-    border: 2.5px solid var(--border);
-    border-radius: 14px;
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
-    -webkit-appearance: none;
-    caret-color: var(--primary);
+    width: 48px; height: 60px; text-align: center;
+    font-family: 'Fraunces', serif; font-size: 28px; font-weight: 800;
+    color: var(--primary-dark); background: var(--bg);
+    border: 2.5px solid var(--border); border-radius: 14px;
+    outline: none; transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none; caret-color: var(--primary);
   }
+  .code-input-row input:focus { border-color: var(--primary); background: var(--primary-soft); }
 
-  .code-input-row input:focus {
-    border-color: var(--primary);
-    background: var(--primary-soft);
-  }
-
-  /* ── Status ── */
   .status {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 100px;
-    font-size: 14px;
-    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 100px; font-size: 14px; font-weight: 500;
     margin-bottom: 20px;
   }
-
   .status.waiting { background: #FFF8E1; color: #E65100; }
   .status.ok { background: var(--primary-soft); color: var(--primary-dark); }
-  .status.bad { background: var(--warm-soft); color: var(--warm); }
+  .dot { width:8px; height:8px; border-radius:50%; background:currentColor; animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-    animation: blink 1.4s infinite;
-  }
-
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  /* ── Video ── */
   .video-container {
-    width: 100%;
-    background: #111;
-    border-radius: var(--radius);
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
-    margin-bottom: 20px;
+    width: 100%; background: #111; border-radius: var(--radius);
+    overflow: hidden; position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2); margin-bottom: 20px;
   }
-
   .video-container video {
-    width: 100%;
-    display: block;
-    max-height: 65vh;
-    object-fit: contain;
-    background: #000;
+    width: 100%; display: block; max-height: 65vh;
+    object-fit: contain; background: #000;
   }
-
   .live-badge {
-    position: absolute;
-    top: 12px; left: 12px;
+    position: absolute; top: 12px; left: 12px;
     display: flex; align-items: center; gap: 6px;
-    background: rgba(0,0,0,0.65);
-    backdrop-filter: blur(10px);
-    color: #fff;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
+    color: #fff; padding: 6px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
   }
+  .live-badge .red-dot { width:8px; height:8px; border-radius:50%; background:#EF4444; animation: blink 1s infinite; }
 
-  .live-badge .red-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #EF4444;
-    animation: blink 1s infinite;
+  .flip-cam-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
+    color: #fff; padding: 8px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: none; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; gap: 5px;
   }
+  .flip-cam-badge:active { transform: scale(0.95); }
 
-  /* ── Success state ── */
   .success-state { padding: 20px 0 8px; }
-
   .success-state .check {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: var(--primary-soft);
+    width: 72px; height: 72px; border-radius: 50%; background: var(--primary-soft);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
-    font-size: 36px;
+    margin: 0 auto 16px; font-size: 36px;
     animation: checkPop 0.5s cubic-bezier(.34,1.56,.64,1) both;
   }
-
   @keyframes checkPop { from { transform: scale(0); } to { transform: scale(1); } }
+  .success-state h3 { font-family:'Fraunces',serif; font-size:20px; color:var(--primary-dark); margin-bottom:6px; }
+  .success-state p { color:var(--muted); font-size:14px; font-weight:300; line-height:1.5; }
 
-  .success-state h3 {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--primary-dark);
-    margin-bottom: 6px;
-  }
-
-  .success-state p {
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 300;
-    line-height: 1.5;
-  }
-
-  /* ── Buttons ── */
   .stop-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 28px;
-    border-radius: 12px;
-    border: 2px solid var(--warm);
-    background: transparent;
-    color: var(--warm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; border-radius: 12px; border: 2px solid var(--warm);
+    background: transparent; color: var(--warm);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 20px; transition: all 0.2s;
   }
   .stop-btn:hover { background: var(--warm-soft); }
-
   .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--muted);
-    font-size: 13px;
-    text-decoration: none;
-    margin-bottom: 20px;
-    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; color: var(--muted);
+    font-size: 13px; text-decoration: none; margin-bottom: 20px; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
   .back-link:hover { color: var(--text); }
-
-  .helper-text {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 300;
-    margin-top: 12px;
-    line-height: 1.5;
-  }
-
-  .error-msg {
-    color: var(--warm);
-    font-size: 13px;
-    font-weight: 500;
-    margin-top: 8px;
-    min-height: 20px;
-  }
-
+  .helper-text { font-size:13px; color:var(--muted); font-weight:300; margin-top:12px; line-height:1.5; }
+  .error-msg { color:var(--warm); font-size:13px; font-weight:500; margin-top:8px; min-height:20px; }
   .hidden { display: none !important; }
-
   .spinner {
-    width: 24px; height: 24px;
-    border: 3px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-    vertical-align: middle;
+    width:24px; height:24px; border:3px solid rgba(255,255,255,0.3);
+    border-top-color:#fff; border-radius:50%;
+    animation: spin 0.7s linear infinite; display:inline-block; vertical-align:middle;
   }
-
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .callout {
-    background: #FFF9EC;
-    border: 1.5px dashed #F0D68C;
-    border-radius: 14px;
-    padding: 16px;
-    margin-top: 20px;
-    text-align: left;
+    background: #FFF9EC; border: 1.5px dashed #F0D68C; border-radius: 14px;
+    padding: 16px; margin-top: 20px; text-align: left;
+  }
+  .callout .callout-title { font-weight:700; font-size:13px; color:#B8860B; margin-bottom:4px; }
+  .callout .callout-body { font-size:13px; color:var(--muted); font-weight:300; line-height:1.5; }
+
+  .or-divider {
+    display: flex; align-items: center; gap: 14px;
+    margin: 16px 0 4px; color: var(--muted); font-size: 12px; font-weight: 500;
+  }
+  .or-divider::before, .or-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
   }
 
-  .callout .callout-title {
-    font-weight: 700;
-    font-size: 13px;
-    color: #B8860B;
-    margin-bottom: 4px;
-  }
-
-  .callout .callout-body {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 300;
-    line-height: 1.5;
-  }
-
-  /* ── Retry banner ── */
-  .retry-banner {
-    background: var(--warm-soft);
-    border: 1.5px solid var(--warm);
-    border-radius: 14px;
-    padding: 16px;
-    margin-top: 16px;
-    text-align: center;
-  }
-
-  .retry-banner p {
-    font-size: 14px;
-    color: var(--warm);
-    font-weight: 500;
-    margin-bottom: 10px;
-  }
-
-  .retry-banner button {
-    background: var(--warm);
-    color: white;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
+  .self-preview {
+    width: 100%; max-height: 200px; object-fit: cover;
+    border-radius: 14px; margin: 16px 0;
+    border: 2px solid var(--border); background: #000;
   }
 </style>
 </head>
@@ -464,14 +249,26 @@
   <div id="s-share-start" class="main-card hidden">
     <span class="back-link" onclick="goHome()">← Back</span>
     <h2>Share Your Screen</h2>
-    <p class="subtitle">Tap the big green button below.<br>When your phone asks, tap <strong>"Start now"</strong>.</p>
-    <button class="big-btn green" id="shareBtn" onclick="startShare()">
-      <span class="btn-icon">📱</span>
-      Share My Screen
+    <p class="subtitle">Tap the button below so your helper can see what you see.</p>
+
+    <button class="big-btn green" id="camBtn" onclick="startCamera()">
+      <span class="btn-icon">📹</span>
+      <span id="camBtnLabel">Show My Screen via Camera</span>
     </button>
+
+    <div id="screenShareOption" class="hidden">
+      <div class="or-divider">or</div>
+      <button class="secondary-btn" id="screenBtn" onclick="startScreenCapture()">
+        <span class="btn-icon">🖥️</span>
+        Share Screen Directly
+      </button>
+    </div>
+
     <div class="callout">
-      <div class="callout-title">💡 What happens?</div>
-      <div class="callout-body">Your helper will be able to see your screen to guide you. They <strong>cannot touch or change anything</strong> — only look.</div>
+      <div class="callout-title" id="calloutTitle">📹 How it works</div>
+      <div class="callout-body" id="calloutBody">
+        Your phone's <strong>rear camera</strong> will turn on. Just point it at whatever you need help with — your screen, an error message, anything. Your helper sees it live!
+      </div>
     </div>
   </div>
 
@@ -481,6 +278,7 @@
     <h2>Tell Your Helper This Code</h2>
     <p class="subtitle">Read these 6 numbers to your helper over the phone:</p>
     <div class="room-code" id="roomCodeDisplay"></div>
+    <video id="selfPreview" class="self-preview hidden" autoplay playsinline muted></video>
     <p class="helper-text">Your helper types this code on their phone to connect and see your screen.</p>
   </div>
 
@@ -489,8 +287,9 @@
     <div class="success-state">
       <div class="check">✅</div>
       <h3>You're Connected!</h3>
-      <p>Your helper can see your screen now.<br>Just use your phone normally!</p>
+      <p id="connectedMsg">Your helper can see your camera now. Point it at what you need help with!</p>
     </div>
+    <video id="selfPreviewConnected" class="self-preview hidden" autoplay playsinline muted></video>
     <button class="stop-btn" onclick="endSession()">⏹ Stop Sharing</button>
   </div>
 
@@ -525,8 +324,9 @@
   <div id="s-view-watching" class="hidden" style="width:100%;">
     <div class="status ok" style="margin-bottom:14px;"><span class="dot"></span> Connected — viewing Mom's screen</div>
     <div class="video-container">
-      <video id="remoteVideo" autoplay playsinline></video>
+      <video id="remoteVideo" autoplay playsinline webkit-playsinline></video>
       <div class="live-badge"><span class="red-dot"></span> LIVE</div>
+      <button class="flip-cam-badge" id="flipCamBtn" onclick="requestFlipCamera()">🔄 Flip Camera</button>
     </div>
     <button class="stop-btn" onclick="endSession()" style="width:100%;">⏹ Disconnect</button>
   </div>
@@ -544,42 +344,53 @@
 
 <script>
 // ══════════════════════════════════════════
-//  EasyView — PeerJS-powered screen sharing
+//  EasyView v3 — Camera + Screen sharing
 // ══════════════════════════════════════════
 
-let peer = null;       // PeerJS instance
-let conn = null;       // data connection (for signaling readiness)
-let call = null;       // media call
+let peer = null;
+let conn = null;
+let call = null;
 let localStream = null;
 let roomCode = '';
+let shareMode = ''; // 'camera' | 'screen'
+let currentFacingMode = 'environment'; // rear camera first
+let isViewerSide = false;
 
 const SCREENS = [
-  's-roles', 's-share-start', 's-share-waiting', 's-share-connected',
-  's-view-enter', 's-view-connecting', 's-view-watching', 's-ended'
+  's-roles','s-share-start','s-share-waiting','s-share-connected',
+  's-view-enter','s-view-connecting','s-view-watching','s-ended'
 ];
 
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
 function hide(id) { document.getElementById(id).classList.add('hidden'); }
 function showOnly(id) { SCREENS.forEach(hide); show(id); }
 
-// ── Generate 6-digit code ──
-function makeCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+function makeCode() { return String(Math.floor(100000 + Math.random() * 900000)); }
+function peerId(code) { return 'easyview-' + code; }
+
+// ── Detect if real screen capture works (desktop only) ──
+function canScreenShare() {
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) return false;
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 }
 
-// ── PeerJS ID from code (prefix to avoid conflicts) ──
-function peerId(code) {
-  return 'easyview-' + code;
+function initSharerUI() {
+  if (canScreenShare()) {
+    show('screenShareOption');
+    document.getElementById('calloutTitle').textContent = '📹 Camera mode';
+    document.getElementById('calloutBody').innerHTML =
+      'Point your camera at whatever you need help with. Your helper sees it live! On desktop, you can also use <strong>"Share Screen Directly"</strong> below.';
+  } else {
+    hide('screenShareOption');
+    document.getElementById('calloutTitle').textContent = '📹 How it works';
+    document.getElementById('calloutBody').innerHTML =
+      'Your phone\'s <strong>rear camera</strong> will turn on. Just point it at whatever you need help with — your other screen, an error message, a document. Your helper sees it live and can guide you!';
+  }
 }
 
 // ── Navigation ──
-function goHome() {
-  cleanup();
-  showOnly('s-roles');
-}
-
-function goShare() { showOnly('s-share-start'); }
-
+function goHome() { cleanup(); showOnly('s-roles'); }
+function goShare() { showOnly('s-share-start'); initSharerUI(); }
 function goView() {
   showOnly('s-view-enter');
   setTimeout(() => {
@@ -588,27 +399,56 @@ function goView() {
   }, 300);
 }
 
-// ── Auto-route from URL ──
+// Auto-route from URL
 (function() {
   const p = location.pathname;
   if (p === '/share') goShare();
   else if (p === '/view') goView();
+
+  // Detect iOS in-app browsers (WKWebView) which don't support WebRTC
+  // Instagram, Facebook, LinkedIn, etc. all use in-app browsers
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+  const isInAppBrowser = isIOS && !isSafari && !/CriOS|FxiOS/.test(ua);
+  // Also detect Facebook/Instagram/LinkedIn in-app browsers
+  const isEmbeddedBrowser = /FBAN|FBAV|Instagram|LinkedIn/i.test(ua);
+
+  if (isInAppBrowser || isEmbeddedBrowser) {
+    document.querySelector('.page').innerHTML = `
+      <div class="brand">
+        <h1>Easy<span>View</span></h1>
+      </div>
+      <div class="main-card">
+        <h2>Open in Safari</h2>
+        <p class="subtitle" style="margin-bottom:16px;">
+          This app needs Safari (or Chrome) to access your camera.
+          Tap the <strong>⋯</strong> or <strong>Share</strong> button, then choose <strong>"Open in Safari"</strong>.
+        </p>
+        <div class="callout">
+          <div class="callout-title">📋 Or copy this link</div>
+          <div class="callout-body" style="word-break:break-all;user-select:all;margin-top:4px;font-weight:500;color:var(--primary-dark);">
+            ${location.href}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 })();
 
 // ══════════════════════════
-//  SHARER FLOW (Mom's side)
+//  SHARER: Camera
 // ══════════════════════════
 
-async function startShare() {
-  const btn = document.getElementById('shareBtn');
+async function startCamera() {
+  const btn = document.getElementById('camBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Starting…';
+  btn.innerHTML = '<span class="spinner"></span> Starting camera…';
 
   try {
-    // 1. Capture screen FIRST — most likely failure point
-    localStream = await navigator.mediaDevices.getDisplayMedia({
+    localStream = await navigator.mediaDevices.getUserMedia({
       video: {
-        cursor: 'always',
+        facingMode: currentFacingMode,
         width: { ideal: 1280 },
         height: { ideal: 720 },
         frameRate: { ideal: 15, max: 30 }
@@ -616,90 +456,163 @@ async function startShare() {
       audio: false
     });
 
-    // If user stops sharing via OS UI
-    localStream.getVideoTracks()[0].addEventListener('ended', () => endSession());
-
-    // 2. Create PeerJS peer with a room code
-    roomCode = makeCode();
-
-    peer = new Peer(peerId(roomCode), {
-      debug: 0,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-        ]
-      }
-    });
-
-    peer.on('open', () => {
-      // Show the code to Mom
-      showOnly('s-share-waiting');
-      const display = document.getElementById('roomCodeDisplay');
-      display.innerHTML = '';
-      roomCode.split('').forEach((d, i) => {
-        const div = document.createElement('div');
-        div.className = 'digit';
-        div.textContent = d;
-        setTimeout(() => div.classList.add('pop'), i * 100);
-        display.appendChild(div);
-      });
-    });
-
-    // 3. When viewer calls us, answer with our screen stream
-    peer.on('call', (incomingCall) => {
-      call = incomingCall;
-      call.answer(localStream);
-
-      call.on('stream', () => {
-        // We don't need their stream, but connection is live
-        showOnly('s-share-connected');
-      });
-
-      call.on('close', () => endSession());
-      call.on('error', () => endSession());
-
-      // Show connected after brief delay (sometimes 'stream' event doesn't fire for sharer)
-      setTimeout(() => {
-        if (call && call.open !== false) {
-          showOnly('s-share-connected');
-        }
-      }, 2000);
-    });
-
-    // Also listen for data connection (viewer pings us to trigger)
-    peer.on('connection', (dataConn) => {
-      conn = dataConn;
-      conn.on('data', (data) => {
-        if (data === 'ping') {
-          // Viewer is ready — we just wait for the call
-        }
-      });
-      conn.on('close', () => endSession());
-    });
-
-    peer.on('error', (err) => {
-      console.error('Peer error:', err);
-      if (err.type === 'unavailable-id') {
-        // Code collision — try again with new code
-        roomCode = makeCode();
-        peer.destroy();
-        startShare();
-      } else {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="btn-icon">📱</span> Share My Screen';
-      }
-    });
+    shareMode = 'camera';
+    await setupPeerAndShowCode();
 
   } catch (err) {
-    console.error('Share error:', err);
+    console.error('Camera error:', err);
     btn.disabled = false;
-    btn.innerHTML = '<span class="btn-icon">📱</span> Share My Screen';
+    btn.innerHTML = '<span class="btn-icon">📹</span> <span>Show My Screen via Camera</span>';
+    if (err.name === 'NotAllowedError') {
+      alert('Camera permission was denied. Please allow camera access and try again.');
+    }
   }
 }
 
 // ══════════════════════════
-//  VIEWER FLOW (Your side)
+//  SHARER: Screen capture (desktop)
+// ══════════════════════════
+
+async function startScreenCapture() {
+  const btn = document.getElementById('screenBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Starting…';
+
+  try {
+    localStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always' },
+      audio: false
+    });
+
+    localStream.getVideoTracks()[0].addEventListener('ended', () => endSession());
+    shareMode = 'screen';
+    await setupPeerAndShowCode();
+
+  } catch (err) {
+    console.error('Screen share error:', err);
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon">🖥️</span> Share Screen Directly';
+  }
+}
+
+// ══════════════════════════
+//  SHARER: Common PeerJS setup
+// ══════════════════════════
+
+async function setupPeerAndShowCode() {
+  roomCode = makeCode();
+  isViewerSide = false;
+
+  peer = new Peer(peerId(roomCode), {
+    debug: 0,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+      ]
+    }
+  });
+
+  peer.on('open', () => {
+    showOnly('s-share-waiting');
+
+    if (shareMode === 'camera') {
+      const preview = document.getElementById('selfPreview');
+      preview.srcObject = localStream;
+      preview.classList.remove('hidden');
+      // iOS Safari needs explicit play()
+      preview.play().catch(() => {});
+    }
+
+    const display = document.getElementById('roomCodeDisplay');
+    display.innerHTML = '';
+    roomCode.split('').forEach((d, i) => {
+      const div = document.createElement('div');
+      div.className = 'digit';
+      div.textContent = d;
+      setTimeout(() => div.classList.add('pop'), i * 100);
+      display.appendChild(div);
+    });
+  });
+
+  peer.on('call', (incomingCall) => {
+    call = incomingCall;
+    call.answer(localStream);
+    call.on('stream', () => showSharerConnected());
+    call.on('close', () => endSession());
+    call.on('error', () => endSession());
+    setTimeout(() => { if (call && call.open !== false) showSharerConnected(); }, 2500);
+  });
+
+  peer.on('connection', (dataConn) => {
+    conn = dataConn;
+    conn.on('data', (data) => {
+      if (data === 'switch-camera' && shareMode === 'camera') {
+        switchCamera();
+      }
+    });
+    conn.on('close', () => endSession());
+  });
+
+  peer.on('error', (err) => {
+    console.error('Peer error:', err);
+    if (err.type === 'unavailable-id') {
+      roomCode = makeCode();
+      peer.destroy();
+      setupPeerAndShowCode();
+    }
+  });
+}
+
+function showSharerConnected() {
+  showOnly('s-share-connected');
+  const msg = document.getElementById('connectedMsg');
+  if (shareMode === 'camera') {
+    msg.textContent = 'Your helper can see your camera now. Point it at what you need help with!';
+    const preview = document.getElementById('selfPreviewConnected');
+    preview.srcObject = localStream;
+    preview.classList.remove('hidden');
+    preview.play().catch(() => {});
+  } else {
+    msg.textContent = 'Your helper can see your screen now. Just use your computer normally!';
+  }
+}
+
+// ── Switch front/rear camera ──
+async function switchCamera() {
+  if (shareMode !== 'camera') return;
+  currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+
+  try {
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: currentFacingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 15, max: 30 }
+      },
+      audio: false
+    });
+
+    const newTrack = newStream.getVideoTracks()[0];
+    const oldTrack = localStream.getVideoTracks()[0];
+
+    if (call && call.peerConnection) {
+      const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) await sender.replaceTrack(newTrack);
+    }
+
+    oldTrack.stop();
+    localStream = newStream;
+
+    [document.getElementById('selfPreview'), document.getElementById('selfPreviewConnected')]
+      .forEach(p => { if (p) p.srcObject = localStream; });
+
+  } catch (err) { console.error('Camera switch error:', err); }
+}
+
+// ══════════════════════════
+//  VIEWER FLOW
 // ══════════════════════════
 
 function joinSession() {
@@ -714,6 +627,7 @@ function joinSession() {
 
   errEl.textContent = '';
   roomCode = code;
+  isViewerSide = true;
 
   const btn = document.getElementById('joinBtn');
   btn.disabled = true;
@@ -734,36 +648,60 @@ function joinSession() {
   peer.on('open', () => {
     const targetId = peerId(roomCode);
 
-    // Open a data connection first (to check if peer exists)
     conn = peer.connect(targetId, { reliable: true });
 
     conn.on('open', () => {
       conn.send('ping');
 
-      // Now call the sharer — we send a dummy stream (or no stream)
-      // PeerJS requires a stream for call, so create a silent one
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      const dummyStream = canvas.captureStream(1);
+      // CRITICAL iOS Safari fix:
+      // Safari won't receive remote streams unless we send a REAL media track
+      // (canvas.captureStream doesn't count on Safari)
+      // So we request a tiny audio-only or video stream as a workaround
+      async function makeLocalStream() {
+        try {
+          // Try getting a real (but tiny) video stream
+          const s = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1, height: 1, frameRate: 1 },
+            audio: false
+          });
+          return s;
+        } catch(e1) {
+          try {
+            // Fallback: audio only
+            const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            return s;
+          } catch(e2) {
+            // Last resort: canvas stream (works on Chrome/Firefox, may fail on Safari)
+            const canvas = document.createElement('canvas');
+            canvas.width = 1; canvas.height = 1;
+            return canvas.captureStream(1);
+          }
+        }
+      }
 
-      call = peer.call(targetId, dummyStream);
+      makeLocalStream().then(viewerStream => {
+        call = peer.call(targetId, viewerStream);
 
-      call.on('stream', (remoteStream) => {
-        const video = document.getElementById('remoteVideo');
-        video.srcObject = remoteStream;
-        showOnly('s-view-watching');
-      });
+        call.on('stream', (remoteStream) => {
+          const video = document.getElementById('remoteVideo');
+          video.srcObject = remoteStream;
+          // iOS Safari requires explicit play() call
+          const playPromise = video.play();
+          if (playPromise) playPromise.catch(() => {
+            // Autoplay blocked — add tap-to-play
+            video.addEventListener('click', () => video.play(), { once: true });
+          });
+          showOnly('s-view-watching');
+          show('flipCamBtn');
+        });
 
-      call.on('close', () => endSession());
-      call.on('error', (err) => {
-        console.error('Call error:', err);
-        endSession();
+        call.on('close', () => endSession());
+        call.on('error', (err) => { console.error('Call error:', err); endSession(); });
       });
     });
 
     conn.on('error', (err) => {
-      console.error('Connection error:', err);
+      console.error('Conn error:', err);
       showOnly('s-view-enter');
       errEl.textContent = 'Could not find that code. Check and try again.';
       btn.disabled = false;
@@ -774,32 +712,31 @@ function joinSession() {
   peer.on('error', (err) => {
     console.error('Peer error:', err);
     showOnly('s-view-enter');
-
     if (err.type === 'peer-unavailable') {
-      errEl.textContent = 'Code not found. Make sure Mom has started sharing.';
+      errEl.textContent = 'Code not found. Make sure Mom has started sharing first.';
     } else {
       errEl.textContent = 'Connection failed. Please try again.';
     }
-
     btn.disabled = false;
     btn.innerHTML = '<span class="btn-icon">🔗</span> Connect';
   });
+}
+
+// Viewer can request camera flip
+function requestFlipCamera() {
+  if (conn && conn.open) {
+    conn.send('switch-camera');
+  }
 }
 
 // ══════════════════════
 //  CLEANUP
 // ══════════════════════
 
-function endSession() {
-  cleanup();
-  showOnly('s-ended');
-}
+function endSession() { cleanup(); showOnly('s-ended'); }
 
 function cleanup() {
-  if (localStream) {
-    localStream.getTracks().forEach(t => t.stop());
-    localStream = null;
-  }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if (call) { try { call.close(); } catch(e) {} call = null; }
   if (conn) { try { conn.close(); } catch(e) {} conn = null; }
   if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
@@ -812,33 +749,20 @@ function cleanup() {
 document.querySelectorAll('#codeInputRow input').forEach((inp, idx, all) => {
   inp.addEventListener('input', () => {
     inp.value = inp.value.replace(/\D/g, '').slice(-1);
-    if (inp.value && idx < all.length - 1) {
-      all[idx + 1].focus();
-    }
-    // Auto-submit when all filled
+    if (inp.value && idx < all.length - 1) all[idx + 1].focus();
     if (idx === all.length - 1 && inp.value) {
       const code = Array.from(all).map(i => i.value).join('');
       if (code.length === 6) joinSession();
     }
   });
-
   inp.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace' && !inp.value && idx > 0) {
-      all[idx - 1].focus();
-    }
+    if (e.key === 'Backspace' && !inp.value && idx > 0) all[idx - 1].focus();
   });
-
-  // Paste full code
   inp.addEventListener('paste', (e) => {
     e.preventDefault();
     const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '');
-    pasted.split('').slice(0, 6).forEach((ch, i) => {
-      if (all[i]) all[i].value = ch;
-    });
-    if (pasted.length >= 6) {
-      all[5].focus();
-      setTimeout(joinSession, 200);
-    }
+    pasted.split('').slice(0, 6).forEach((ch, i) => { if (all[i]) all[i].value = ch; });
+    if (pasted.length >= 6) { all[5].focus(); setTimeout(joinSession, 200); }
   });
 });
 </script>
